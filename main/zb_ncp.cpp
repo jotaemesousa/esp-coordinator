@@ -3,6 +3,7 @@
 #include "protocol.h"
 #include "statuses.h"
 #include "utils.h"
+#include "zb_mem_config_custom.h"
 
 static const char* TAG = "NCP";
 
@@ -38,6 +39,8 @@ static const zb_af_simple_desc_7_20_t ep1 = {
 
 
 esp_err_t zb_ncp::init_int() {
+	// Binding table sizes configured via zb_mem_config_custom.h
+	// Source: 32 entries (max), Destination: 64 entries
 	ZB_INIT();
 	zb_set_max_children(64);
     zb_set_nvram_erase_at_start(0);
