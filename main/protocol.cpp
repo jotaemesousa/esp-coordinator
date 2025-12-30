@@ -136,13 +136,16 @@ void protocol::on_rx_packet(const ncp_header_t& hdr,const void* data,size_t data
 }
 
 esp_err_t protocol::on_rx_int(const void* data,size_t size) {
+	if (size > RX_BUFFER_SIZE) {
+		ESP_LOGE(TAG,"Incoming data size %d exceeds buffer size %d", size, RX_BUFFER_SIZE);
+		return ESP_ERR_NO_MEM;
+	}
+	
 	if (m_rx_buffer_pos + size > RX_BUFFER_SIZE) {
-		ESP_LOGE(TAG,"Buffer full, skip part");
 		auto overflow = (m_rx_buffer_pos + size) - RX_BUFFER_SIZE;
-		if (overflow < m_rx_buffer_pos) {
-			memmove(m_rx_buffer,&m_rx_buffer[overflow],m_rx_buffer_pos-overflow);
-		}
-		m_rx_buffer_pos = RX_BUFFER_SIZE-size;
+		ESP_LOGW(TAG,"Buffer overflow, discarding %d oldest bytes", overflow);
+		memmove(m_rx_buffer, &m_rx_buffer[overflow], m_rx_buffer_pos - overflow);
+		m_rx_buffer_pos -= overflow;
 	}
 	memcpy(&m_rx_buffer[m_rx_buffer_pos],data,size);
 	m_rx_buffer_pos += size;
